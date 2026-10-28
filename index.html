@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Senior PM Prep Tracker</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky progress header, then counters row, then phase cards in one column with week tags */
+:root{
+  --bg:#f5f6f8;--surface:#ffffff;--fg:#1b2230;--muted:#5d6678;--line:#dfe3ea;
+  --accent:#2f5bd3;--accent-soft:#e6ecfb;--done:#1f8a5b;--done-soft:#e3f4ec;
+  --display:"Fraunces",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161e;--surface:#1a202b;--fg:#e6e9ef;--muted:#98a1b3;--line:#2b3342;
+  --accent:#7d9cf0;--accent-soft:#222c44;--done:#4cc38a;--done-soft:#183327;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161e;--surface:#1a202b;--fg:#e6e9ef;--muted:#98a1b3;--line:#2b3342;
+  --accent:#7d9cf0;--accent-soft:#222c44;--done:#4cc38a;--done-soft:#183327;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header .wrap{padding-block:14px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
+h1{font-family:var(--display);font-size:1.45rem;margin:0;text-wrap:balance}
+.sub{color:var(--muted);font-size:.85rem}
+.bar{flex:1 1 220px;min-width:0}
+.track{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.fill{height:100%;background:var(--done);width:0;transition:width .3s}
+.pct{font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+h2{font-family:var(--display);font-size:1.15rem;margin:0}
+.section-label{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:28px 0 10px;font-weight:600}
+.counters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.ctr{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px}
+.ctr .lbl{font-size:.8rem;color:var(--muted)}
+.ctr .val{font-family:var(--mono);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.ctr .val small{color:var(--muted);font-size:.8rem}
+.ctr .btns{display:flex;gap:6px;margin-top:6px}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:4px 10px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ctr .mini{height:4px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}
+.ctr .mini span{display:block;height:100%;background:var(--accent)}
+.today{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;gap:10px}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.day{width:14px;height:14px;border-radius:3px;background:var(--line)}
+.day.on{background:var(--done)}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;overflow:hidden}
+.phase>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.phase>summary::-webkit-details-marker{display:none}
+.wk{font-family:var(--mono);font-size:.75rem;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:999px}
+.phase.complete .wk{background:var(--done-soft);color:var(--done)}
+.ph-title{flex:1 1 200px;min-width:0}
+.ph-goal{color:var(--muted);font-size:.85rem}
+.ph-count{font-family:var(--mono);font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.items{border-top:1px solid var(--line);padding:6px 0}
+.item{display:flex;gap:12px;padding:8px 16px;align-items:flex-start}
+.item input{margin-top:4px;width:17px;height:17px;accent-color:var(--done);flex:none}
+.item .txt{min-width:0}
+.item.done .name{text-decoration:line-through;color:var(--muted)}
+.tag{font-size:.7rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted);margin-right:6px}
+.tag.yt{color:#c0392b;border-color:currentColor}
+a{color:var(--accent)}
+.out{margin:4px 16px 12px;padding:10px 12px;background:var(--accent-soft);border-radius:6px;font-size:.88rem}
+.out b{color:var(--accent)}
+textarea{width:100%;min-height:90px;font:inherit;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.danger{color:var(--muted);font-size:.8rem}
+table{border-collapse:collapse;width:100%;font-size:.88rem}
+td,th{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+.tbl{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+@media (prefers-reduced-motion:reduce){.fill{transition:none}}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <div><h1>Senior PM Prep</h1><div class="sub">Target: Senior PM / AI PM · ₹32 LPA+ fixed · 12 weeks</div></div>
+  <div class="bar"><div class="track"><div class="fill" id="fill"></div></div><div class="pct" id="pct">0 of 0 tasks</div></div>
+</div></header>
+
+<main class="wrap">
+  <div class="section-label">Today</div>
+  <div class="today">
+    <div class="row"><button id="markToday">Mark today studied</button><span class="sub" id="streak"></span></div>
+    <div class="days" id="days" aria-label="Last 84 days"></div>
+    <div class="sub">Daily 2 hrs: 30 min video/course · 45 min practice · 30 min writing · 15 min podcast</div>
+  </div>
+
+  <div class="section-label">Practice counters</div>
+  <div class="counters" id="counters"></div>
+
+  <div class="section-label">Roadmap</div>
+  <div id="phases"></div>
+
+  <div class="section-label">Weekly rhythm</div>
+  <div class="tbl"><table>
+    <tr><th>Day</th><th>Focus</th></tr>
+    <tr><td>Mon / Wed</td><td>Product sense + metrics</td></tr>
+    <tr><td>Tue / Thu</td><td>AI PM concepts + SQL</td></tr>
+    <tr><td>Fri</td><td>Behavioural stories + 1 mock</td></tr>
+    <tr><td>Sat</td><td>Applications, referrals, 1 LinkedIn post</td></tr>
+    <tr><td>Sun</td><td>Review + 1 AI product teardown</td></tr>
+  </table></div>
+
+  <div class="section-label">Notes</div>
+  <textarea id="notes" placeholder="Interview learnings, companies applied to, questions you got..."></textarea>
+
+  <div class="section-label">Backup</div>
+  <div class="row">
+    <button id="exportBtn">Copy progress backup</button>
+    <button id="importBtn">Restore from backup</button>
+    <button id="resetBtn" class="danger">Reset everything</button>
+  </div>
+  <textarea id="backup" hidden placeholder="Paste backup here, then press Restore again"></textarea>
+  <p class="sub">Progress saves in this browser only. Copy a backup now and then if you switch devices.</p>
+</main>
+
+<script>
+const yt=q=>"https://www.youtube.com/results?search_query="+encodeURIComponent(q);
+const PHASES=[
+ {id:"p1",wk:"Wk 1–2",title:"PM foundations refresher",goal:"Speak in clear frameworks, metrics and trade-offs.",items:[
+  ["Rewrite resume: one page, a number in every bullet",null,"task"],
+  ["Update LinkedIn headline: Senior PM | AI Products | 0→1 & Growth",null,"task"],
+  ["Trim portfolio to 3 strongest case studies with results up top",null,"task"],
+  ["Exponent PM interview channel: watch 2 mocks a day","https://www.youtube.com/@tryexponent","yt"],
+  ["Senior PM product sense mock interviews",yt("product sense mock interview senior pm"),"yt"],
+  ["Lenny's Podcast: 1 episode a week","https://www.youtube.com/@LennysPodcast","yt"],
+  ["Lenny's Newsletter free posts","https://www.lennysnewsletter.com","read"],
+  ["Product School channel","https://www.youtube.com/@ProductSchool","yt"]],
+  out:"Write down 10 STAR stories: conflict, failure, influence, prioritisation, win, data reversal."},
+ {id:"p2",wk:"Wk 2–4",title:"Metrics, SQL, experimentation",goal:"Root-cause any metric drop and query your own data.",items:[
+  ["SQLBolt: finish every lesson","https://sqlbolt.com","course"],
+  ["Mode SQL Tutorial: intermediate + advanced","https://mode.com/sql-tutorial/","read"],
+  ["LeetCode Top SQL 50","https://leetcode.com/studyplan/top-sql-50/","practice"],
+  ["Udacity A/B Testing by Google (free)","https://www.udacity.com/course/ab-testing--ud257","course"],
+  ["Metric drop / root cause interviews",yt("pm interview metric dropped root cause"),"yt"],
+  ["Amplitude North Star Playbook","https://amplitude.com/books/north-star","read"]],
+  out:"Draw metric trees for Swiggy, Groww and PhysicsWallah."},
+ {id:"p3",wk:"Wk 4–6",title:"AI fundamentals",goal:"Explain LLMs, RAG, fine-tuning and agents to anyone.",items:[
+  ["Karpathy: Intro to Large Language Models (start here)","https://www.youtube.com/watch?v=zjkBMFhNj_g","yt"],
+  ["3Blue1Brown neural network series","https://www.youtube.com/@3blue1brown","yt"],
+  ["AI for Everyone, Andrew Ng (audit free)","https://www.coursera.org/learn/ai-for-everyone","course"],
+  ["Google: Intro to Generative AI","https://www.cloudskillsboost.google/course_templates/536","course"],
+  ["DeepLearning.AI short course: Prompt Engineering","https://www.deeplearning.ai/short-courses/","course"],
+  ["DeepLearning.AI short course: RAG","https://www.deeplearning.ai/short-courses/","course"],
+  ["DeepLearning.AI short course: AI Agents","https://www.deeplearning.ai/short-courses/","course"],
+  ["RAG explained for PMs",yt("RAG explained for product managers"),"yt"]],
+  out:"One-page cheat sheet: prompting vs RAG vs fine-tuning vs agents, with cost and latency."},
+ {id:"p4",wk:"Wk 6–9",title:"AI PM skills",goal:"Evals, AI UX and unit economics. This is the salary premium.",items:[
+  ["Hamel Husain: Your AI Product Needs Evals (most important)","https://hamel.dev/blog/posts/evals/","read"],
+  ["Anthropic prompt engineering guide","https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview","read"],
+  ["Google PAIR People + AI Guidebook","https://pair.withgoogle.com/guidebook/","read"],
+  ["AI PM interview questions",yt("AI product manager interview questions"),"yt"],
+  ["LLM evals explained",yt("LLM evals explained product"),"yt"],
+  ["Aakash Gupta AI PM newsletter","https://www.news.aakashg.com","read"],
+  ["Lenny's Podcast episodes with AI PMs (OpenAI, Anthropic, Perplexity)",yt("Lenny's podcast AI product manager"),"yt"],
+  ["Eval write-up: Jyoti (golden set, judge, cost per call, failures)",null,"task"],
+  ["Eval write-up: sarkari-match",null,"task"],
+  ["Publish both write-ups on harshlariya.in",null,"task"]],
+  out:"Two eval case studies live on your portfolio."},
+ {id:"p5",wk:"Wk 8–10",title:"Strategy and senior leadership",goal:"Handle market sizing, build/buy and roadmap questions.",items:[
+  ["Product strategy interviews",yt("product strategy interview pm"),"yt"],
+  ["Guesstimates / market sizing",yt("guesstimate product manager interview"),"yt"],
+  ["Shreyas Doshi product leadership threads","https://x.com/shreyas","read"],
+  ["Stratechery free articles","https://stratechery.com","read"],
+  ["Write 3 leadership stories: roadmap, stakeholders, OKRs",null,"task"]],
+  out:"Answer 'how would you enter a new market' in under 10 minutes."},
+ {id:"p6",wk:"Wk 9–12",title:"Mocks, applications, negotiation",goal:"Get 2–3 offers that close in the same week.",items:[
+  ["Book peer mocks on Exponent practice","https://www.tryexponent.com/practice","practice"],
+  ["Check bands on Levels.fyi India PM","https://www.levels.fyi/t/product-manager/locations/india","read"],
+  ["Check bands on AmbitionBox","https://www.ambitionbox.com","read"],
+  ["Build a 40-company list in 3 tiers",null,"task"],
+  ["PRD template ready for take-home assignments",null,"task"],
+  ["Negotiation script: ask 36–38L fixed, never share current CTC first",null,"task"]],
+  out:"Run pm-job-hunter daily and send 5 referral messages a day."}
+];
+const COUNTERS=[["sql","SQL problems",30],["metric","Metric cases",15],["design","Product design cases",15],["mocks","Mock interviews",10],["stories","STAR stories",10],["referrals","Referral messages",100],["apps","Applications",40],["posts","LinkedIn posts",12]];
+const KEY="pmprep_v1";
+let S={checks:{},counts:{},days:{},notes:""};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const tagLabel={yt:"YouTube",read:"Read",course:"Course",practice:"Practice",task:"Task"};
+
+function renderPhases(){
+  const root=document.getElementById("phases");root.innerHTML="";
+  PHASES.forEach(p=>{
+    const d=document.createElement("details");d.className="phase";
+    const done=p.items.filter((_,i)=>S.checks[p.id+"_"+i]).length;
+    if(done===p.items.length)d.classList.add("complete");
+    if(done<p.items.length&&!root.querySelector("details[open]"))d.open=true;
+    d.innerHTML=`<summary><span class="wk">${p.wk}</span><div class="ph-title"><h2>${p.title}</h2><div class="ph-goal">${p.goal}</div></div><span class="ph-count">${done}/${p.items.length}</span></summary>`;
+    const list=document.createElement("div");list.className="items";
+    p.items.forEach(([name,url,tag],i)=>{
+      const id=p.id+"_"+i,on=!!S.checks[id];
+      const row=document.createElement("label");row.className="item"+(on?" done":"");
+      row.innerHTML=`<input type="checkbox" id="${id}" ${on?"checked":""}><div class="txt"><span class="tag ${tag}">${tagLabel[tag]}</span><span class="name">${url?`<a href="${url}" target="_blank" rel="noopener">${name}</a>`:name}</span></div>`;
+      row.querySelector("input").addEventListener("change",e=>{S.checks[id]=e.target.checked;save();renderPhases();renderTotal()});
+      list.appendChild(row);
+    });
+    d.appendChild(list);
+    const o=document.createElement("div");o.className="out";o.innerHTML=`<b>Output:</b> ${p.out}`;d.appendChild(o);
+    root.appendChild(d);
+  });
+}
+function renderTotal(){
+  const total=PHASES.reduce((a,p)=>a+p.items.length,0);
+  const done=Object.keys(S.checks).filter(k=>S.checks[k]).length;
+  document.getElementById("fill").style.width=(done/total*100)+"%";
+  document.getElementById("pct").textContent=`${done} of ${total} tasks · ${Math.round(done/total*100)}%`;
+}
+function renderCounters(){
+  const root=document.getElementById("counters");root.innerHTML="";
+  COUNTERS.forEach(([k,l,goal])=>{
+    const v=S.counts[k]||0;const c=document.createElement("div");c.className="ctr";
+    c.innerHTML=`<div class="lbl">${l}</div><div class="val">${v} <small>/ ${goal}</small></div><div class="mini"><span style="width:${Math.min(100,v/goal*100)}%"></span></div><div class="btns"><button aria-label="Remove one">−</button><button aria-label="Add one">+1</button></div>`;
+    const [m,p]=c.querySelectorAll("button");
+    m.onclick=()=>{S.counts[k]=Math.max(0,v-1);save();renderCounters()};
+    p.onclick=()=>{S.counts[k]=v+1;save();renderCounters()};
+    root.appendChild(c);
+  });
+}
+const ds=d=>d.toISOString().slice(0,10);
+function renderDays(){
+  const root=document.getElementById("days");root.innerHTML="";
+  const t=new Date();
+  for(let i=83;i>=0;i--){const d=new Date(t);d.setDate(t.getDate()-i);const k=ds(d);
+    const el=document.createElement("span");el.className="day"+(S.days[k]?" on":"");el.title=k;root.appendChild(el)}
+  let s=0;const d=new Date(t);if(!S.days[ds(d)])d.setDate(d.getDate()-1);
+  while(S.days[ds(d)]){s++;d.setDate(d.getDate()-1)}
+  const total=Object.keys(S.days).length;
+  document.getElementById("streak").textContent=`Streak: ${s} day${s===1?"":"s"} · ${total} study days total`;
+  document.getElementById("markToday").textContent=S.days[ds(t)]?"Studied today ✓ (tap to undo)":"Mark today studied";
+}
+document.getElementById("markToday").onclick=()=>{const k=ds(new Date());if(S.days[k])delete S.days[k];else S.days[k]=1;save();renderDays()};
+const notes=document.getElementById("notes");notes.value=S.notes||"";
+notes.addEventListener("input",()=>{S.notes=notes.value;save()});
+const bk=document.getElementById("backup");
+document.getElementById("exportBtn").onclick=async e=>{
+  const txt=JSON.stringify(S);
+  try{await navigator.clipboard.writeText(txt);e.target.textContent="Copied backup"}
+  catch(err){bk.hidden=false;bk.value=txt;bk.select();e.target.textContent="Copy the text below"}
+};
+document.getElementById("importBtn").onclick=e=>{
+  if(bk.hidden||!bk.value.trim()){bk.hidden=false;bk.value="";bk.focus();e.target.textContent="Restore now";return}
+  try{S=Object.assign({checks:{},counts:{},days:{},notes:""},JSON.parse(bk.value));save();notes.value=S.notes;all();bk.hidden=true;e.target.textContent="Restored"}
+  catch(err){e.target.textContent="That backup text is invalid. Paste it again"}
+};
+let armed=false;
+document.getElementById("resetBtn").onclick=e=>{
+  if(!armed){armed=true;e.target.textContent="Tap again to erase all progress";setTimeout(()=>{armed=false;e.target.textContent="Reset everything"},4000);return}
+  S={checks:{},counts:{},days:{},notes:""};save();notes.value="";all();armed=false;e.target.textContent="Reset everything";
+};
+function all(){renderPhases();renderTotal();renderCounters();renderDays()}
+all();
+</script>
+</body>
+</html>
